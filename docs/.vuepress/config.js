@@ -8,6 +8,9 @@ module.exports = {
   description: '用于记录所学知识',
   header: headerConf,
   plugins: pluginsConf,
+  markdown: {
+    lineNumbers: true   // 行号
+  },
   themeConfig: {
     // 下/上一篇 链接
     nextLinks: true,
