@@ -235,6 +235,11 @@ function pick(obj, ...keys) {
 console.log(bookData);    // {title: "ES6标准入门", author: "阮一峰"}
 ```
 
+rest参数和arguments对象的区别：
+1. rest参数只包含那些没有对应形参的实参，而`arguments`对象是包含传递给函数所有的实参。
+
+2. `arguments`对象不是数组，而是一个类似于数组的对象，所以你想使用数组的方法，必须使用`Array.prototype.slice.call(arguments)`先将其转化为数组。而rest参数就是一个真正的数组，数组的所有方法都可以使用。
+
 下面是一个rest参数代替`arguments`变量的例子。
 ``` js
 // arguments变量的写法
@@ -245,8 +250,6 @@ function sortNumbers() {
 // rest参数的写法
 const sortNumbers = (...numbers) => numbers.sort();
 ```
-
-`arguments`对象不是数组，而是一个类似于数组的对象。所以你想使用数组的方法，必须使用`Array.prototype.slice.call`先将其转化为数组。rest参数就不存在这个问题，它就是一个真正的数组，数组的所有方法都可以使用。
 
 ::: danger 注意一
 rest参数后面不能再有其他参数了（即只能是最后一个参数），否则报错。
