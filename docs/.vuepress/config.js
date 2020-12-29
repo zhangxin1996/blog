@@ -9,10 +9,9 @@ module.exports = {
   header: headerConf,
   plugins: pluginsConf,
   markdown: {
-    lineNumbers: true   // 行号
+    lineNumbers: true
   },
   themeConfig: {
-    // 下/上一篇 链接
     nextLinks: true,
     prevLinks: true,
     lastUpdated: '更新时间',

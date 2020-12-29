@@ -3,7 +3,7 @@ module.exports = {
     {
       title: 'HTML',
       collapsable: true,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         ['', '首页'],
         ['html1', 'HTML基本标签'],
@@ -15,7 +15,7 @@ module.exports = {
     {
       title: 'ES6',
       collapsable: true,
-      sidebarDepth: 2,
+      sidebarDepth: 1,
       children: [
         ['', '前言'],
         ['01_let', 'let的使用'],
@@ -28,6 +28,26 @@ module.exports = {
         ['08_object-new-methods', '对象的新增方法'],
         ['09_Symbol', 'Symbol'],
         ['10_set-map', 'Set和Map数据结构']
+      ]
+    }
+  ],
+  '/pages/frontend/frame/vue/': [
+    {
+      title: 'Vue',
+      collapsable: true,
+      sidebarDepth: 2,
+      children: [
+        ['', '前言'],
+        ['01_初识vue', '初识vue'],
+        ['02_vue的差值操作', 'vue的差值操作'],
+        ['03_计算属性', '计算属性'],
+        ['04_v-bind绑定属性', 'v-bind绑定属性'],
+        ['05_v-on事件监听', 'v-on事件监听'],
+        ['06_条件判断', '条件判断'],
+        ['07_循环遍历', '循环遍历'],
+        // ['08_object-new-methods', '对象的新增方法'],
+        // ['09_Symbol', 'Symbol'],
+        // ['10_set-map', 'Set和Map数据结构']
       ]
     }
   ]

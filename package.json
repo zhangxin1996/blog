@@ -6,7 +6,7 @@
   "devDependencies": {
     "@vuepress/plugin-back-to-top": "^1.7.1",
     "@vuepress/plugin-medium-zoom": "^1.7.1",
-    "vuepress": "^1.7.1"
+    "vuepress": "1.0.2"
   },
   "scripts": {
     "dev": "vuepress dev docs",

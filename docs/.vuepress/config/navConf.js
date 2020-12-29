@@ -32,6 +32,16 @@ module.exports = [ // 导航栏配置
     ]
   },
   {
+    text: '前端框架',
+    ariaLabel: "前端的框架内容",
+    items: [
+      {
+        text: 'Vue',
+        link: '/pages/frontend/frame/vue/'
+      }
+    ]
+  },
+  {
     text: 'github',
     link: 'https://github.com/zhangxin1996'
   }
