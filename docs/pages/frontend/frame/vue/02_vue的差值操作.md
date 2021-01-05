@@ -44,14 +44,13 @@
 
 ::: danger 注意
 `Mustache语法`不支持语句和流控制。
+:::
 
 ``` js
 //不支持
 {{ var book = 'Vue.js实战' }}
 {{ if(ok) return msg }}
 ```
-:::
-
 
 ## v-once
 该指令后面不需要跟任何表达式（比如之前的v-for后面是要跟表达式的）。
@@ -79,7 +78,7 @@
 
 
 ## v-html
-当从服务器请求到的数据本身就是一个HTML标签，如果通过Mustache语法输出，会将HTML标签原样输出。我们希望解析HTML标签，并显示对应的内容。
+当从服务器请求到的数据本身就是一个HTML标签，如果通过`Mustache语法`输出，会将HTML标签原样输出。我们希望解析HTML标签，并显示对应的内容。
 
 我们使用`v-html`指令，该指令往往会跟上String类型数据，将String类型数据内的HTML标签解析并渲染出内容。
 
@@ -107,7 +106,7 @@
 
 `v-text`与`v-html`的区别：
 
-* 当使用`v-text`时，则会将所绑定的数据原样显示，Mustache语法也是一样，这时候就需要`v-html`指令解析html标签，渲染内容。
+* 当使用`v-text`时，则会将所绑定的数据原样显示，和`Mustache语法`一样，这时候就需要`v-html`指令解析html标签，渲染内容。
 
 ## v-text
 
@@ -132,7 +131,7 @@ body>
 ```
 <img class="medium" :src="$withBase('/frontend/frame/vue/02_vue-instruction/03_v-text.png')" alt="v-text指令的展示">
 
-虽然`v-text`与`Mustache语句`都可以将数据显示出来，但也有区别：
+虽然`v-text`与`Mustache语法`都可以将数据显示出来，但也有区别：
 
 * 当使用`v-text`时，data数据会将之前的HTML元素中的值覆盖，并会清空；而在`Mustache语法`中，data数据只会将占位符位置进行覆盖，其他的值不会发生变化，也不会清空。
 
@@ -155,7 +154,7 @@ body>
 </body>
 ```
 
-<img class="medium" :src="$withBase('/frontend/frame/vue/02_vue-instruction/04_v-text与Mustache语法的区别.png')" alt="v-text与Mustache语法的区别">
+<img class="medium" :src="$withBase('/frontend/frame/vue/02_vue-instruction/04_v-text与mustache语法的区别.png')" alt="v-text与Mustache语法的区别">
 
 
 ## v-pre
@@ -186,7 +185,7 @@ body>
 
 ## v-bloak
 
-在某些情况下，浏览器可能会直接显示出未编译的Mustache语法。
+在某些情况下，浏览器可能会直接显示出未编译的`Mustache语法`。
 
 在vue解析之前，div中有一个属性`v-bloak`，只要有这个属性的标签就隐藏起来。在vue解析之后，div没有一个属性`v-bloak`，所以显示出来数据。
 

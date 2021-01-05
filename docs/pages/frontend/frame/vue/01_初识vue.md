@@ -180,7 +180,7 @@ View：负责视图相关；在我们前端开发中，通常就是DOM层；
 
 ViewModel：它是View与Model沟通的桥梁，一方面它实现了`Data Binding`，也就是数据绑定，将Model的改变事实的反映到View中。另一方面它实现了`DOM Listener`，也就是DOM监听，为DOM发生一些事件（点击、滚动、touch等）时可以监听到，并在需要的情况下改变对应的Data；
 
-在计数器案例中就有严格的MVVM思想，View依然是我们的DOM，Model就是我们的data数据，ViewModel就是我们创建的Vue对象实例。首先viewModel通过Data Binding让Data中的数据实时的在DOM中显示，其次ViewModel通过DOM Listener来监听DOM事件，通过methods的操作，来改变data中的数据。
+在计数器案例中就有严格的MVVM思想，View依然是我们的DOM，Model就是我们的data数据，ViewModel就是我们创建的Vue对象实例。首先viewModel通过`Data Binding`让Data中的数据实时的在DOM中显示，其次ViewModel通过`DOM Listener`来监听DOM事件，通过methods的操作，来改变data中的数据。
 
 有了Vue帮助我们完成ViewModel的处理，后续的开发我们可以专注于数据的处理和DOM结构的编写工作了。
 
