@@ -53,7 +53,11 @@ module.exports = {
         ['13_过滤器', '过滤器'],
         ['14_自定义指令', '自定义指令'],
         ['15_动画', '动画'],
-        ['16_Vue-CLI相关', 'Vue-CLI相关']
+        ['16_Vue-CLI相关', 'Vue-CLI相关'],
+        ['17_vue-router', 'vue-router'],
+        ['18_Promise', 'Promise'],
+        ['19_axios', 'axios'],
+        ['20_vuex', 'Vuex']
       ]
     }
   ]
