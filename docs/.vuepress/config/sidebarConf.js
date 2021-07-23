@@ -3,7 +3,7 @@ module.exports = {
     {
       title: 'HTML',
       collapsable: true,
-      sidebarDepth: 1,
+      sidebarDepth: 2,
       children: [
         ['', '首页'],
         ['html1', 'HTML基本标签'],
@@ -11,11 +11,22 @@ module.exports = {
       ]
     }
   ],
+  '/pages/frontend/basis/css/': [
+    {
+      title: 'CSS',
+      collapsable: true,
+      sidebarDepth: 2,
+      children: [
+        ['', '首页'],
+        ['01_flex', 'Flex']
+      ]
+    }
+  ],
   '/pages/frontend/advanced/es6/': [
     {
       title: 'ES6',
       collapsable: true,
-      sidebarDepth: 1,
+      sidebarDepth: 2,
       children: [
         ['', '前言'],
         ['01_let', 'let的使用'],
@@ -28,6 +39,22 @@ module.exports = {
         ['08_object-new-methods', '对象的新增方法'],
         ['09_Symbol', 'Symbol'],
         ['10_set-map', 'Set和Map数据结构']
+      ]
+    }
+  ],
+  '/pages/frontend/advanced/git/': [
+    {
+      title: 'Git',
+      collapsable: true,
+      sidebarDepth: 2,
+      children: [
+        ['', '前言'],
+        ['01_git概述', 'Git概述'],
+        ['02_git安装', 'Git安装'],
+        ['03_创建版本库.md', '创建版本库'],
+        ['04_时光机穿梭.md', '时光机穿梭'],
+        
+        
       ]
     }
   ],
@@ -58,6 +85,18 @@ module.exports = {
         ['18_Promise', 'Promise'],
         ['19_axios', 'axios'],
         ['20_vuex', 'Vuex']
+      ]
+    }
+  ],
+  '/pages/frontend/frame/vue3/': [
+    {
+      title: 'Vue3',
+      collapsable: true,
+      sidebarDepth: 2,
+      children: [
+        ['', '前言'],
+        ['01_邂逅Vue3开发', '邂逅Vue3开发'],
+        ['02_vue3模板语法', 'vue3模板语法'],
       ]
     }
   ]

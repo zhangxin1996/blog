@@ -399,6 +399,38 @@ export default {
 getter 在通过方法访问时，每次都会去进行调用，而不会缓存结果。
 :::
 
+### mapGetters 辅助函数
+
+mapGetters 辅助函数仅仅是将 store 中的 getter 映射到局部计算属性：
+
+``` vue
+import {mapGetters} from "vuex"
+
+export default {
+  // ...
+  computed: {
+    // 使用对象展开运算符将 getter 混入 computed 对象中
+    ...mapGetters([
+      'doneTodosCount',
+      'anotherGetter',
+      // ...
+    ])
+  }
+}
+```
+
+如果你想将一个 getter 属性另外取一个名字，使用对象形式：
+
+``` vue
+export default {
+  computed: {
+    ...mapGetters({
+      // 把 `this.doneCount` 映射为 `this.$store.getters.doneTodosCount`
+      doneCount: 'doneTodosCount'
+    })
+  }
+}
+```
 
 ## Mutations
 
@@ -754,7 +786,7 @@ Vuex 要求我们 mutations 中的方法必须是同步方法。
 但是，如果 Vuex 中 mutation 中的方法内使用了异步函数：
 
 ``` js
-mutation: {
+mutations: {
   [types.UPDATE_INFO](state, payload) {
     setTimeout(() => {
       Vue.set(state.info, "address", payload.address);
@@ -771,6 +803,7 @@ mutation: {
 
 **所以通常通常下，不要在 mutation 中进行异步的操作。**
 
+### 
 
 ## Actions
 

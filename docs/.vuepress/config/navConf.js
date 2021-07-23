@@ -28,6 +28,10 @@ module.exports = [ // 导航栏配置
       {
         text: 'ES6',
         link: '/pages/frontend/advanced/es6/'
+      },
+      {
+        text: 'Git',
+        link: '/pages/frontend/advanced/git/'
       }
     ]
   },
@@ -38,6 +42,10 @@ module.exports = [ // 导航栏配置
       {
         text: 'Vue',
         link: '/pages/frontend/frame/vue/'
+      },
+      {
+        text: 'Vue3',
+        link: '/pages/frontend/frame/vue3/'
       }
     ]
   },
