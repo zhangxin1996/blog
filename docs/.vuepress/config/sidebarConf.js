@@ -97,6 +97,8 @@ module.exports = {
         ['', '前言'],
         ['01_邂逅Vue3开发', '邂逅Vue3开发'],
         ['02_vue3模板语法', 'vue3模板语法'],
+        ['03_vue3的Options-API', 'vue3的Options-API'],
+        ['04_组件化开发模式', '组件化开发模式'],
       ]
     }
   ]
