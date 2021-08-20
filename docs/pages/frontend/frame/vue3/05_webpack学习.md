@@ -1378,4 +1378,201 @@ module.exports = {
 }
 ```
 
-### webpack对vue文件的处理
+## webpack对vue的处理
+
+### js文件中写vue代码并打包
+我们学习Vue应该包含Vue相关的代码：
+
+``` js
+import { createApp } from "vue";
+
+// vue代码
+const app = createApp({
+  template: "<h2>Hello World</h2>",
+  data() {
+    return {
+      title: "你好啊，李银河"
+    }
+  }
+});
+
+app.mount("#app");
+```
+
+当打包后浏览器界面上是没有模板内容显示的，而且命令行也没有报错信息，接着我们查看控制台发现有警告信息：
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/22_vue代码控制台警告信息.png')" alt="vue代码控制台警告信息">
+
+翻译是：**组件提供了模板选项，但此 Vue 版本不支持运行时编译。**意思是说，我们当前Vue代码中有模板template，而引用的Vue版本是没办法解析模板template的。
+
+我们查看`node_modules`中Vue有多个版本，在dist文件夹下：
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/23_node_modules中vue多个版本.png')" alt="node_modules中vue多个版本">
+
+### vue的不同版本选择
+
+统一说明下：
+* 下面讲解不同的版本内容，括号中是可选的参数；
+* 包含.runtime的文件说明：此文件是不包含compiler的，不能编译template模板；
+* 包含.prod的文件说明：此文件是丑化过（压缩过）的，在生产阶段使用的；
+
+下面讲解不同的版本：
+* vue(.runtime).global(.prod).js:
+  * 此版本是之前通过CDN引入或者下载至本地的Vue版本；
+  * 在浏览器中通过`&lt;script src="…"&gt;`直接使用；
+  * 会暴露一个全局的Vue来使用；
+* vue(.runtime).esm-browser(.prod).js:
+  * 此版本用于通过原生ES Module导入使用（在浏览器中通过`&lt;script type="module" src="…"&gt;`来使用）
+* vue(.runtime).esm-bundler.js:
+  * 此版本用于webpack、rollup、parcel等构建工具使用；
+  * 在构建工具中默认使用的是`vue.runtime.esm-bundler.js`，此版本是不能解析模板template，如果需要解析模板template，就要手动指定`vue.esm-bundler.js`;
+* vue.cjs(.prod).js:
+  * 此版本是服务器端渲染使用；
+  * 通过require()在Node.js中使用；
+
+了解vue的不同版本后，对引入vue包进行修改，之后在浏览器就可以显示template模板中的内容了。
+
+``` js
+import { createApp } from "vue/dist/vue.esm-bundler";
+```
+
+对于什么时候使用**runtime+compiler(运行时+编译器)**什么时候使用**runtime only(仅运行时)**肯定有疑惑？下面通过在Vue开发过程中编写DOM元素的方式来分情况讨论。
+
+在Vue开发过程中我们有三种方式来编写DOM元素：
+* 方式一：template模板的方式（也是之前经常使用的方式）；
+* 方式二：render函数的方式，使用h函数来编写渲染的内容；
+* 方式三：通过.vue文件中template来编写模板；
+
+它们是如何处理的：
+* 方式二是通过h函数直接返回一个虚拟节点，也就是VNode节点。
+* 方式一和方式三中template都需要有特定的方式来对其进行解析：
+  * 方式三.vue文件中的template可以通过`vue-loader`对其进行编译处理；
+  * 方式一中的template必须**通过源码中一部分代码**来进行编译处理；
+
+所以，Vue在让我们选择版本的时分为**运行时+编译器**和**仅运行时**：
+* **运行时+编译器**包含了对template模板的编译代码，更加完整包体积也更大一些；
+* **仅运行时**没有包含对template模板的编译代码，包体积也相对更小一些；
+
+### 编写.vue文件对其打包
+
+在前面提到，真实开发大多数情况下都是使用SFC（Single-file Components(单文件组件)）。
+
+在VSCode对SFC的支持：
+* 插件一：Vetur，从Vue2开发就一直在使用的VSCode支持Vue的插件；
+* 插件二：Volar，官方推荐的插件（后续会基于Volar开发官方的VSCode插件）；
+
+我们编写一个App.vue文件，在createApp导入使用：
+
+``` vue
+<template class="app">
+  <h2>Hello World</h2>
+  <p>{{title}}</p>
+</template>
+
+<<script>
+export default {
+  data() {
+    return {
+      title: "你好啊，李银河"
+    }
+  }
+}
+</script>
+
+<style scoped>
+  h2 {
+    color: red;
+  }
+
+  p {
+    color: blue;
+  }
+</style>
+```
+
+``` js
+import { createApp } from "vue/dist/vue.esm-bundler";
+import App from "./vue/App.vue";
+
+createApp(App).mount("#app");
+```
+
+我们对代码打包会报错，我们需要一个合适的loader来处理.vue文件。
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/25_需要一个合适的loader处理.vue文件.png')" alt="需要一个合适的loader处理.vue文件">
+
+安装vue-loader：
+
+```
+npm install vue-loader@next -D
+```
+
+在webpack.config.js中进行配置规则：
+
+``` js
+{
+  test: /\.vue$/,
+  use: [
+    {
+      loader: "vue-loader"
+    }
+  ]
+}
+```
+
+进行以上配置后打包还是会报错，是因为必须添加`@vue/compiler-sfc插件`来对template进行解析，vue-loader是依赖@vue/compiler-sfc插件对template进行解析的，
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/26_vue-loader需要插件解析template.png')" alt="vue-loader需要插件解析template">
+
+安装@vue/compiler-sfc插件：
+```
+npm install @vue/compiler-sfc -D
+```
+
+配置对应的插件：
+
+``` js
+const { VueLoaderPlugin } = require("vue-loader/dist/index");
+
+module.exports = {
+  plugins: [
+    new VueLoaderPlugin()
+  ]
+}
+```
+
+重新打包即支持App.vue的写法，我们也可以编写其他的.vue文件来作为App的子组件。
+
+
+### 全局标识的配置
+
+我们会发现浏览器的控制台还有另外一个警告：
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/24_需要全局标识的配置.png')" alt="需要全局标识的配置">
+
+我们点击[链接](https://github.com/vuejs/vue-next/tree/master/packages/vue#bundler-build-feature-flags)进入，在GitHub上的文档中我们可以找到说明：
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/27_全局标识匹配说明.png')" alt="全局标识匹配说明">
+
+在esm-bundler 3.0.0-rc.c版本时，需要设置两个特性的标识：
+* 一个是Vue的Options API，是对Vue2做适配的。默认是true，
+  * 在Vue源码中是有对Options API做解析的，但我们在代码中全部使用Vue3的Composition API就不需要对Options API做解析，应该在源码中删除。
+* 一个是Vue在Production模式下是否支持devtools工具。默认是false。
+
+虽然都有默认值，但是强烈建议手动对它们进行配置。以便在最终捆绑包中进行适当的摇树。也就是对不需要的代码在源代码中删减，最终的包体积会减少。
+
+在webpack的DefinePlugin中设置：
+
+``` js
+module.exports = {
+  plugins: [
+    new DefinePlugin({
+      // 其他代码
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false
+    }),
+  ]
+}
+```
+
+之后打包浏览器控制台就没有警告信息了。
