@@ -135,7 +135,7 @@ console.log(priceFormat(3.99));
 </html>
 ```
 
-这样直接在浏览器打开控制台是会报错的，因为浏览器不认识`import`和`export`关键字。
+这样直接在浏览器打开控制台是会报错的。
 
 ### 使用全局webpack打包
 
@@ -1576,3 +1576,581 @@ module.exports = {
 ```
 
 之后打包浏览器控制台就没有警告信息了。
+
+
+## devServer
+
+### 为什么搭建本地服务器
+
+在开发源代码时，为了运行需要两个操作：
+* 通过`npm run build`命令，对源打码进行编译；
+* 通过VSCode中**live server插件**或者直接打开浏览器的方式，打开index.html代码查看效果；
+
+但这个过程频繁操作非常影响开发效率，我们希望做到，当文件中内容发生变化的时候，可以自动完成编译和展示。
+
+我们先来说为了完成自动编译，webpack提供了几种可选方式：
+* webpack的watch mode；
+* webpack-dev-serve(常用)；
+* webpack-dev-middleware(少见);
+
+### webpack的watch mode
+
+webpack给我们提供了**watch模式**，在该模式下，webpack依赖图中的所有文件，只要有一个文件发生更新，那么代码将被重新编译。不需要我们收定执行 npm run build 指令了。
+
+开启watch模式有两种方式，选其一都可实现：
+* 在webpack.config.js配置文件，在导出的配置中，添加配置`watch: true`;
+``` js
+module.exports = {
+  // 省略其他代码
+  watch: true
+}
+```
+
+* 在package.json文件的 scripts 中新添加一个 watch 的脚本，添加`--watch的标识`；
+``` json
+{
+  "script": {
+    "watch": "webpack --watch"
+  }
+}
+```
+
+当你有`--watch标识`时会交给webpack-cli处理，webpack-cli会将`--watch标识`转换为配置**watch: true**。
+
+### webpack-dev-server
+
+webpack的watch模式虽说可以监听到文件的变化，但事实上它本身并没有自动刷新浏览器的功能。虽说可以在**VSCode中使用live-server插件**来完成这一功能，但是我们希望不使用live-server插件的情况下，可以具备`live reloading（实时重新加载）`的功能。
+
+可以使用webpack-dev-server，下面进行安装：
+
+```
+npm install webpack-dev-server -D
+```
+
+在package.json文件的 scripts 中新添加一个 serve 的脚本，之后执行命令webpack-cli会找到 webpack-dev-server 来帮助我们开启一个本地服务器。
+
+``` json
+{
+  "scripts": {
+    "serve": "webpack serve"
+  }
+}
+```
+
+配置后，在命令行执行 npm run serve 指令，我们打包的项目现在已经运行到localhost:8080端口，我们可访问此地址。
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/28_webpack-env-server.png')" alt="webpack-env-server">
+
+原理是：webpack-dev-server是基于express框架搭建的本地服务器，当访问http://localhost:8080/时，会到框架搭建的服务器中找到打包的静态资源，之后将静态资源返回到浏览器，并做出展示。 
+
+::: tip 提示
+当使用webpack-dev-server时，我们发现dist文件夹内并没有打包后的文件，这是因为webpack-dev-server在编译之后不会写入任何输出文件，而是将打包后的bundle文件保存在内存中。
+
+这样做的好处是：当用户访问时，减少了将文件读取到内存的这个过程，提高了开发效率。
+
+事实上，webpack-dev-server使用了一个memfs这个库（memory-fs），这是用于保存内存中文件系统的库。
+:::
+
+
+下面讲解对webpack-dev-server进行一些配置选项：
+
+1. contentBase
+
+我们修改配置文件，告知 dev server，从什么位置查找文件。contentBase是指不由 webpack 打包生成的静态资源的根目录，默认为基础路径。我们加载public目录下的favicon.ico（注意：不使用copy-webpack-plugin插件）：
+
+``` js
+module.exports = {
+  devServer: {
+    contentBase: "./public"
+  }
+};
+```
+
+contentBase详细解析：
+
+源代码通过devServer打包的静态资源放到memfs的内存里面，之后会开启一个express服务器。当浏览器通过localhost:8080访问服务器，浏览器会下载服务器对应资源，一开始只会下载index.html文件，我们知道index.html中肯定还有其他资源，比如img、css、script，之后就会加载这些资源。就要从内存中打包的静态资源中查找，如果在内存中的静态资源加载不到，express框架通过devserver配置的contentBase定义的文件夹中去查找，找到加载到express框架的内存中，之后下载到浏览器就能加载资源。
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/30_devServer的contentBase的理解.png')" alt="devServer的contentBase的理解">
+
+那contentBase和copy-webpack-plugin插件都是什么时候用：
+* 在开发阶段为了对源代码编译的过程性能问题做考虑建议使用contentBase，
+* 而部署阶段的时候，要使用copy-webpack-plugin插件将public中的资源进行拷贝到dist文件夹 ，之后将所有资源进行打包部署到服务器。
+
+总结一句话：就是资源加载的过程要去哪加载资源。
+
+如果遇到下面的报错信息，是webpack-dev-server安装版本太高，需要手动指定版本，当前版本为3.11.2。
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/29_配置文件devServer.contentBase报错.png')" alt="配置文件devServer.contentBase报错">
+
+
+2. 模块热替换(HMR)
+
+HMR的全称是Hot Module Replacement，翻译过来是模块热替换。模块热替换是指在应用程序运行过程中，**添加、替换、删除模块，无需重新刷新整个页面**。
+
+使用HMR的好处：
+* 不需要重新加载全部内容，只更新需要变化的内容的模块，提高了开发效率；
+* 不需要重新加载整个页面，可以保留应用程序中状态不丢失；
+* 当修改了css、js源代码，会立即在浏览器更新，相当于直接在浏览器中修改；
+
+默认情况下，webpack-dev-server已经支持HMR，只需开启即可。如果不开启HMR的情况下，如果修改了源代码，会整个页面自动刷新，使用的是刷新浏览器（live reloading）。
+
+开启HMR，第一步需修改webpack配置：
+
+``` js
+module.exports = {
+  devServer: {
+    hot: true
+  }
+}
+```
+
+第二步要指定哪些模块发生更新时进行HMR，没有指定的模块在内容发生变化时还是刷新浏览器更新。
+
+``` js
+if(module.hot) {
+  module.hot.accept("./js/element", () => {
+    console.log("更新完成");
+  })
+}
+```
+
+开启HMR，浏览器控制台的效果：
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/33_开启HMR的效果.png')" alt="开启HMR的效果">
+
+::: danger 注意
+由于 JavaScript 既可以编写服务端代码也可以编写浏览器代码，所以 webpack 提供了多种部署 target。当 target 设置为 web，webpack 将在 web 环境编译打包代码。
+
+在webpack配置：
+``` js
+module.exports = {
+  target: "web"
+}
+```
+:::
+
+HMR的原理是什么，如何做到只更新一个模块中的内容呢？
+
+其实webpack-dev-server会创建两个服务：提供静态资源的服务（express server）和Socket服务（net.Socket server）。
+
+源代码通过webpack编译打包成对应的资源（bundle.js），之后webpack-dev-server会开启一个express server（静态服务器）负责直接提供静态资源的服务（也就是打包之后的资源可以直接被浏览器请求和解析的），客户端通过发送http请求和服务器建立连接后，服务器做出响应也就是将请求的对应资源发送到客户端。
+
+而Socket Server即HMR开启的Socket Server，是一个socket的长连接，长连接的好处是：建立连接后，服务器可以直接发送文件到客户端。当服务器监听到对应的模块发生变化时，会生成.json（manifest文件这是描述文件）和.js文件（update chunk这是具体更新文件）这两个文件，通过socket长连接直接将这两个文件发送给客户端（浏览器），客户端拿到这两个文件后，通过HMR runtime机制加载这两个文件，并针对修改的模块进行更新。
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/31_HMR的原理图.png')" alt="HMR的原理图">
+
+::: tip 提示
+http连接是短连接，客户端主动发起请求服务器做出响应；
+socket是长链接，客户端和服务器建立联系可以实时的通信，
+:::
+
+当使用框架开发项目时，我们修改了组件，也希望可以进行热更新。事实上社区已对此问题有很成熟的解决方案：
+* Vue开发，使用vue-loader，此loader就支持vue组件的HMR，提供开箱即用的效果；
+* React开发，有React Hot Loader，实时调整react组件（目前React官方已经弃用了，改成使用reactrefresh）；
+
+
+3. host配置
+
+host用于设置主机地址，默认值为localhost，如果希望其他地方可以访问可以设置为 0.0.0.0，需在webpack配置中进行配置：
+
+``` js
+module.exports = {
+  devServer: {
+    host: "0.0.0.0",
+  }
+};
+```
+
+那么localhost 和 0.0.0.0 的区别：
+* localhost其实是域名，一般windows系统默认将localhost指向127.0.0.1，但是localhost并不等于127.0.0.1，localhost指向的IP地址是可以配置的。凡是以127开头的IP地址，都是回环地址（Loop back address）。通俗的讲，就是我们在主机上发送给127开头的IP地址的数据包会被发送的主机自己接收，根本传不出去，外部设备也无法通过回环地址访问到本机。正常的数据库包经过：应用层 - 传输层 - 网络层 - 数据链路层 - 物理层。而回环地址，是在网络层直接就被获取到了，是不会经过数据链路层和物理层的。
+
+* 0.0.0.0：监听IPV4上所有的地址，再根据端口找到不同的应用程序。比如我们监听 0.0.0.0时，在同一个网段下的主机中，通过ip地址是可以访问的。
+
+::: tip 提示
+当在命令行输入 npm run serve 指令后，可在命令行看到可访问http://0.0.0.0:8080，但打开浏览器说无法访问此网站。
+
+我们通过Win+R输入cmd打开命令行工具，输入ipconfig查看ip地址，比如我这里显示192.168.0.107，那在浏览器输入http://192.168.0.107:8080，这样在此局域网的设备都可访问了。
+
+其实这里设置host为0.0.0.0的目的是为了让别的主机可以访问到我的主机，而不是让在浏览器通过http://0.0.0.0:8080访问。
+:::
+
+查看[彻底搞明白webpack-dev-server 配置 host 0.0.0.0作用](cloud.tencent.com/developer/article/1643083)
+
+4. port
+
+设置指定监听的接口号，默认情况下是8080，我们修改为7777。
+
+``` js
+module.exports = {
+  devServer: {
+    port: "7777",
+  }
+};
+```
+
+5. open
+
+告诉 dev-server 在服务器已经启动后自动打开浏览器。设置其为 true 以打开你的默认浏览器，默认值是 false。
+
+``` js
+module.exports = {
+  devServer: {
+    open: true,
+  }
+};
+```
+
+6. compress
+
+设置是否开启gzip compression，默认值是false，开启的好处是从服务器请求资源时下载速度快点。
+
+``` js
+module.exports = {
+  devServer: {
+    compress: true,
+  }
+};
+```
+
+<img class="medium" :src="$withBase('/frontend/frame/vue3/05_learn-webpack/32_devServer的compress属性.png')" alt="devServer的compress属性">
+
+
+7. Proxy
+
+proxy是开发中非常常见的一个配置选项，它的目的是设置代理来解决跨域访问问题。
+
+比如api请求是http://localhost:8888/users，本地启动服务器是http://localhost:7777，这时候发送网络请求就会出现跨域问题。我们可以将请求先发送到一个代理服务器，代理服务器和API服务器是没有跨域问题的，这就解决了跨域问题。
+
+我们对api请求在 localhost:8888 上，可以使用proxy来启用代理：
+
+``` js
+module.exports = {
+  devServer: {
+    proxy: {
+      "api": "http://localhost:8888"
+    }
+  }
+}
+```
+
+现在，对 `/api/users` 的请求会将请求代理到 http://localhost:8888/api/users。
+
+如果不希望传递 /api，则需要重写路径：
+
+``` js
+module.exports = {
+  devServer: {
+    proxy: {
+      "api": {
+       target: "http://localhost:8888",
+       pathRewrite: {'/^api', {}} 
+      }
+    }
+  }
+}
+```
+
+默认情况下，将不接受在HTTPS上运行且证书无效的后端服务器。如果需要，可以将`secure`设置为`false`，默认为true表示不接受：
+
+``` js
+module.exports = {
+  devServer: {
+    proxy: {
+      "api": {
+       target: "http://localhost:8888",
+       pathRewrite: {'/^api', {}},
+       secure: false
+      }
+    }
+  }
+}
+```
+
+默认情况下，代理时会保留主机头的来源，可以将 changeOrigin 设置为 true 以覆盖此行为。什么意思呢？
+
+本地启动服务器是http://localhost:7777，后端api请求是http://localhost:8888。那么后端通过 request.getHeader("Host") 获取依旧是 http://localhost:7777。
+
+如果你设置了 **changeOrigin: true**，那么后端通过 request.getHeader("Host") 获取才是 http://localhost:8888。代理服务器此时会根据请求的 target 地址修改 Host。
+
+``` js
+module.exports = {
+  devServer: {
+    proxy: {
+      "api": {
+       target: "http://localhost:8888",
+       pathRewrite: {'/^api', {}},
+       secure: false,
+       changeOrigin: true
+      }
+    }
+  }
+}
+```
+
+8. historyApiFallback
+
+historyApiFallback是开发中非常常见的属性，主要作用是解决SPA页面在路由跳转之后，进行页面刷新时，返回404的错误。
+
+其值可以是布尔值也可以是对象：
+* 当为布尔值时，默认值为false。如果设置为true，那么在刷新时，返回404错误时会自动返回index.html的内容；
+``` js
+module.exports = {
+  //...
+  devServer: {
+    historyApiFallback: true,
+  },
+};
+```
+* 当为对象时，可以配置rewrites属性，可以配置from来匹配路径，决定要跳转到哪个页面。
+``` js
+module.exports = {
+  //...
+  devServer: {
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/$/, to: '/views/landing.html' },
+        { from: /^\/subpage/, to: '/views/subpage.html' },
+        { from: /./, to: '/views/404.html' },
+      ],
+    },
+  },
+};
+```
+
+事实上devServer中实现historyApiFallback功能是通过connect-history-api-fallback库的：可以查看【[connect-history-api-fallback](https://github.com/bripkens/connect-history-api-fallback) 文档。
+
+
+## resolve模块解析
+
+在开发中有各种各样的模块依赖，这些模块中有些是自己编写的代码，有些是来自是第三方库。resolve可以帮助webpack从每个require/import语句中，找到需要引入到合适的模块代码。
+
+webpack 使用 enhanced-resolve 来解析文件路径。其能解析三种文件路径：
+* 绝对路径
+因为已经获取到文件的绝对路径，所以不需要再做进一步解析；
+* 相对路径
+这种情况下，使用require/import导入的资源文件所处目录，被认为是上下文目录。根据require/import中给定的相对路径，会拼接上下文路径，结合来生成模块的绝对路径；
+* 模块路径
+在resolve.modules中指定的所有目录检索模块，默认值是['node_modules']，所以默认从node_modules中查找文件。
+
+我们可以通过alias配置来设置别名的方式来替换初始模块路径。比如@将代替之前的./src，js将代替之前的./src/js。
+
+``` js
+module.exports = {
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "js": path.resolve(__dirname, "./src/js")
+    }
+  },
+}
+```
+
+如何确定是文件还是文件夹？
+
+如果文件具有后缀名，则直接加载文件，否则将使用resolve.extensions中选项来尝试按顺序解析文件的后缀名。
+
+``` js
+module.exports = {
+  resolve: {
+    extensions: ['.js', '.json', '.ts', ".vue"]
+  },
+}
+```
+
+如果是一个文件夹，会在文件夹中根据resolve.mainFiles配置选项中指定的文件顺序查找。其默认值是['index']，再根据resolve.extensions来解析后缀名。
+
+``` js
+module.exports = {
+  resolve: {
+    mainFiles: ['index'],
+  },
+}
+```
+
+
+## webpack配置区分开发环境和生产环境
+
+目前我们所有的webpack配置信息都是放到一个配置文件中的：webpack.config.js。当配置越来越多这个文件变得越来越不好维护。并且某些配置是开发环境需要使用，有些配置是生产环境需要使用，还有开发环境和生产环境都需要的配置。所以需要对配置进行划分。
+
+在根目录下新建config文件夹，创建三个文件：
+* webpack.dev.config.js(开发环境需要的配置)
+* webpack.prod.config.js(生产环境需要的配置)
+* webpack.comm.config.js(开发环境和生产环境都需要的配置)
+
+当启动时也要区分不同的配置，在package.json中修改build和serve脚本：
+
+``` json
+{
+  "scripts": {
+    "build": "webpack --config ./config/webpack.prod.config.js",
+    "serve": "webpack serve --config ./config/webpack.dev.config.js"
+  }
+}
+```
+
+当代码分离后，开发环境和生产环境都需要的公共代码进行整合，使用webpack-merge进行合并，需要安装：
+
+```
+npm install webpack-merge -D
+```
+
+下面是具体的分离代码：
+
+1. webpack.dev.config.js
+``` js
+const { merge } = require("webpack-merge")
+
+const commonConfig = require("./webpack.comm.config");
+
+// 导出配置文件
+module.exports = merge(commonConfig, {
+  mode: "development",
+  devtool: "source-map",
+  // watch: true,
+  devServer: {
+    contentBase: "./public",
+    hot: true,
+    host: "0.0.0.0",
+    port: "7777",
+    open: true,
+    compress: true,
+    // proxy: {
+    //   "api": {
+    //    target: "http://localhost:8888",
+    //    pathRewrite: {'/^api', {}},
+    //    secure: false,
+    //    changeOrigin: true
+    //   }
+    // }
+  },
+})
+```
+
+2. webpack.prod.config.js
+
+``` js
+const { merge } = require("webpack-merge")
+
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
+
+const commonConfig = require("./webpack.comm.config");
+
+// 导出配置文件
+module.exports = merge(commonConfig, {
+  mode: "production",
+  plugins: [
+    new CleanWebpackPlugin(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: "public", 
+          to: "./",
+          globOptions: {
+            ignore: ["**/index.html"]
+          }
+        }
+      ]
+    }),
+  ]
+})
+```
+
+3. webpack.comm.config.js
+
+``` js
+const path = require('path');
+
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { DefinePlugin } = require("webpack");
+const { VueLoaderPlugin } = require("vue-loader/dist/index");
+
+// 导出配置文件
+module.exports = {
+  target: "web",
+  entry: "./src/index.js",
+  output: {
+    path: path.resolve(__dirname, "../dist"),
+    filename: "js/bundle.js",
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "../src"),
+      "js": path.resolve(__dirname, "../src/js")
+    },
+    extensions: ['.js', '.json', '.ts', ".vue"],
+    mainFiles: ['index'],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: [
+          {loader: "style-loader"},
+          {loader: "css-loader"},
+          {loader: "postcss-loader"}
+        ]
+      },
+      {
+        test: /\.less$/i,
+        use: [
+          {loader: "style-loader"},
+          {loader: "css-loader"},
+          {loader: "less-loader"}
+        ]
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        type: "asset",
+        generator: {
+          filename: "img/[name]_[hash:6][ext]",
+        },
+        parser: {
+          dataUrlCondition: {
+            maxSize: 4 * 1024,
+          }
+        }
+      },
+      {
+        test: /\.(eot|ttf|woff2?)$/i,
+        type: "asset/resource",
+        generator: {
+          filename: "font/[name]_[hash:6][ext]"
+        }
+      },
+      {
+        test: /\.m?js$/i,
+        use: [
+          {loader: "babel-loader"}
+        ]
+      },
+      {
+        test: /\.vue$/,
+        use: [
+          {
+            loader: "vue-loader"
+          }
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: "webpack资源案例",
+      template: "./public/index.html"
+    }),
+    new DefinePlugin({
+      BASE_URL: "'./'",
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false
+    }),
+    new VueLoaderPlugin()
+  ]
+}
+```
+
+::: tip 提示
+之前编写入口文件的规则是：./src/index.js，但是现在我们的配置文件所在位置变成config目录，我们是否应该变成 ../src/index.js呢？
+
+如果修改会发现报错了，这是因为入口文件其实是和context属性有关的。context的作用是：用于解析入口（entry point）和加载器（loader），官方说法：默认是当前路径（但是经过我测试，默认应该是webpack的启动目录）。
+:::

@@ -99,7 +99,10 @@ module.exports = {
         ['02_vue3模板语法', 'vue3模板语法'],
         ['03_vue3的Options-API', 'vue3的Options-API'],
         ['04_组件化开发模式', '组件化开发模式'],
-        ['05_webpack学习', 'webpack学习']
+        ['05_webpack学习', 'webpack学习'],
+        ['06_Vue-CLI', 'Vue-CLI'],
+        ['07_Vite', 'Vite'],
+        ['08_组件化开发', '组件化开发'],
       ]
     }
   ]
